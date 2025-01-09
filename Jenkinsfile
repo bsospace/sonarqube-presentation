@@ -1,11 +1,11 @@
-pipeline{
+pipeline {
     agent any
 
-    stages{
-        stage("Checkout Code"){
-            steps{
+    stages {
+        stage("Checkout Code") {
+            steps {
                 echo 'Checking out code from GitHub'
-                checkout scm 
+                checkout scm
             }
         }
 
@@ -20,6 +20,21 @@ pipeline{
             steps {
                 echo 'Building the project...'
                 sh 'npm run build'
+            }
+        }
+
+        stage('Code Analysis') {
+            steps {
+                echo 'Analyzing code with SonarQube...'
+                withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
+                    sh '''
+                        sonar-scanner \
+                          -Dsonar.projectKey=bso-sonarqube \
+                          -Dsonar.sources=. \
+                          -Dsonar.host.url=https://sonarqube.bsospace.com \
+                          -Dsonar.login=$SONAR_TOKEN
+                    '''
+                }
             }
         }
 
