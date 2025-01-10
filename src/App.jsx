@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './components/layout';
-import Home from './pages/Home';
+import Home from './pages/home';
 import Bug from './pages/bug';
 import CodeSmell from './pages/codesmell';
 import Vulnerabilities from './pages/vulnerabilities';
