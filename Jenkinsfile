@@ -9,31 +9,32 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
+        stage("Install Dependencies") {
             steps {
                 echo 'Installing dependencies...'
                 sh 'npm install'
             }
         }
 
-        stage('Build') {
+        stage("Build") {
             steps {
                 echo 'Building the project...'
                 sh 'npm run build'
             }
         }
 
-        stage('Run Sonarqube') {
+        stage("Run SonarQube") {
             environment {
                 scannerHome = tool 'SonarQube-Scanner';
             }
             steps {
-                // ใช้ withCredentials เพื่อดึงโทเค็นจาก Jenkins credentials store
                 withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
                     sh """
                         ${scannerHome}/bin/sonar-scanner \
                             -Dsonar.projectKey=bso-sonarqube \
                             -Dsonar.sources=. \
+                            -Dsonar.language=js \
+                            -Dsonar.exclusions=node_modules/**,dist/** \
                             -Dsonar.host.url=https://sonarqube.bsospace.com \
                             -Dsonar.login=${SONAR_TOKEN}
                     """
@@ -41,7 +42,7 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
+        stage("Deploy") {
             when {
                 anyOf {
                     branch 'main'
@@ -52,24 +53,25 @@ pipeline {
                 script {
                     if (env.BRANCH_NAME == 'main') {
                         echo "Deploying using docker-compose.yml"
-                        sh "docker compose up -d"
+                        sh "docker compose up -d --build"
                     } else {
                         echo "Deploying using docker-compose.release.yml"
-                        sh "docker compose -f docker-compose.release.yml up -d"
+                        sh "docker compose -f docker-compose.release.yml up -d --build"
                     }
                 }
             }
         }
     }
-    post{
-        always{
-            discordSend customAvatarUrl: '', customFile: '', customUsername: '', description: '', footer: '', image: '', link: '', result: '', scmWebUrl: '', thumbnail: '', title: '', webhookURL: 'https://discordapp.com/api/webhooks/1327155477297238101/sERZBWouIDx6PbI3S2n6gzSJ3e98tGEMfnQdGwEKSZvEuqzHOmlVJQ5gpH8v4lFOJlL4'
+
+    post {
+        always {
+            echo "Build completed. Status: ${currentBuild.currentResult}"
         }
-        success{
-            echo "====++++only when successful++++===="
+        success {
+            echo "Build and deployment succeeded! 🎉"
         }
-        failure{
-            echo "====++++only when failed++++===="
+        failure {
+            echo "Build or deployment failed. Please check the logs. 💥"
         }
     }
 }
