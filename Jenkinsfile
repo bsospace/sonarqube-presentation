@@ -63,7 +63,7 @@ pipeline {
     }
     post{
         always{
-            echo "====++++always++++===="
+            discordSend customAvatarUrl: '', customFile: '', customUsername: '', description: '', footer: '', image: '', link: '', result: '', scmWebUrl: '', thumbnail: '', title: '', webhookURL: 'https://discordapp.com/api/webhooks/1327155477297238101/sERZBWouIDx6PbI3S2n6gzSJ3e98tGEMfnQdGwEKSZvEuqzHOmlVJQ5gpH8v4lFOJlL4'
         }
         success{
             echo "====++++only when successful++++===="
