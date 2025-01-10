@@ -23,17 +23,20 @@ pipeline {
             }
         }
 
-        stage('Code Analysis') {
+        stage('Run Sonarqube') {
+            environment {
+                scannerHome = tool 'SonarQube-Scanner';
+            }
             steps {
-                echo 'Analyzing code with SonarQube...'
+                // ใช้ withCredentials เพื่อดึงโทเค็นจาก Jenkins credentials store
                 withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
-                    sh '''
-                        sonar-scanner \
-                          -Dsonar.projectKey=bso-sonarqube \
-                          -Dsonar.sources=. \
-                          -Dsonar.host.url=https://sonarqube.bsospace.com \
-                          -Dsonar.login=$SONAR_TOKEN
-                    '''
+                    sh """
+                        ${scannerHome}/bin/sonar-scanner \
+                            -Dsonar.projectKey=bso-sonarqube \
+                            -Dsonar.sources=. \
+                            -Dsonar.host.url=https://sonarqube.bsospace.com \
+                            -Dsonar.login=${SONAR_TOKEN}
+                    """
                 }
             }
         }
