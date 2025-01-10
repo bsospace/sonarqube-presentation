@@ -1,7 +1,7 @@
 import React from 'react'
 import { useLocation } from 'react-router-dom'
-import Navigation from './Navigation'
-import MobileNavigation from './MobileNavigation'
+import Navigation from './navigation'
+import MobileNavigation from './mobileNavigation'
 import Breadcrumb from './breadcrumb'
 
 const Layout = ({ children }) => {
