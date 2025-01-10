@@ -1,3 +1,5 @@
-// ตัวอย่าง Bug: Array Index Out of Bound
-const numbers = [1, 2, 3];
-console.log(numbers[3]); // จะได้ค่า undefined เพราะ index เกินขอบเขต
+// ตัวอย่าง Bug
+const value = NaN;
+if (value === NaN) { // ❌ ผิด: "NaN" ไม่สามารถตรวจสอบด้วยการเปรียบเทียบโดยตรง
+    console.log("Value is NaN");
+}
