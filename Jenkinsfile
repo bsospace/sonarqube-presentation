@@ -32,8 +32,9 @@ pipeline {
                     sh """
                         ${scannerHome}/bin/sonar-scanner \
                             -Dsonar.projectKey=bso-sonarqube \
-                            -Dsonar.sources=. \
+                            -Dsonar.sources=src \
                             -Dsonar.language=js \
+                            -Dsonar.inclusions=src/demo/*.js \
                             -Dsonar.exclusions=node_modules/**,dist/** \
                             -Dsonar.host.url=https://sonarqube.bsospace.com \
                             -Dsonar.login=${SONAR_TOKEN}
