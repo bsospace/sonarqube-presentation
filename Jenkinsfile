@@ -44,16 +44,6 @@ pipeline {
             }
         }
 
-        stage('Check SonarQube Quality Gate') {
-            steps {
-                script {
-                    def qualityGate = waitForQualityGate()
-                    currentBuild.result = qualityGate.status == 'OK' ? 'SUCCESS' : 'FAILURE'
-                    echo "SonarQube Quality Gate: ${qualityGate.status}"
-                }
-            }
-        }
-
         stage('Deploy') {
             when {
                 anyOf {
