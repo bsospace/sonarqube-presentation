@@ -15,21 +15,21 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
+        stage("Install Dependencies") {
             steps {
                 echo 'Installing dependencies...'
                 sh 'npm install'
             }
         }
 
-        stage('Build') {
+        stage("Build") {
             steps {
                 echo 'Building the project...'
                 sh 'npm run build'
             }
         }
 
-        stage('Run Sonarqube') {
+        stage("Run SonarQube") {
             environment {
                 scannerHome = tool 'SonarQube-Scanner';
             }
@@ -61,14 +61,14 @@ pipeline {
                     branch pattern: 'release/.*'
                 }
             }
+
             steps {
                 script {
                     if (env.BRANCH_NAME == 'main') {
                         echo "Deploying using docker-compose.yml"
-                        sh "docker compose up -d"
+                        sh "docker compose up -d --build"
                     } else {
-                        echo "Deploying using docker-compose.release.yml"
-                        sh "docker compose -f docker-compose.release.yml up -d"
+                        echo 'skipping deployment for non-main branches'
                     }
                 }
             }
