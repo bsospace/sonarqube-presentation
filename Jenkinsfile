@@ -63,7 +63,7 @@ pipeline {
     }
     post{
         always{
-            discordSend customAvatarUrl: '', customFile: '', customUsername: '', description: '', footer: '', image: '', link: '', result: '', scmWebUrl: '', thumbnail: '', title: '', webhookURL: 'https://discordapp.com/api/webhooks/1327155477297238101/sERZBWouIDx6PbI3S2n6gzSJ3e98tGEMfnQdGwEKSZvEuqzHOmlVJQ5gpH8v4lFOJlL4'
+            discordSend description: "Jenkins Pipeline Build", footer: "Footer Text", webhookURL: "https://discordapp.com/api/webhooks/1327552891384238100/htBat-oTiD20pG0rjLgEeCtOFM-v7tEsL-tP9mkVCxTw6KQ2xsF9eS4dmD0qRhGLBoDm"
         }
         success{
             echo "====++++only when successful++++===="
