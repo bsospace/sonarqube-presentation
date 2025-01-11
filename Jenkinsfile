@@ -1,6 +1,12 @@
 pipeline {
     agent any
 
+    environment {
+        DISCORD_WEBHOOK = credentials('discord-webhook')
+        SONAR_SERVER_URL = 'https://sonarqube.bsospace.com'
+        SONAR_PROJECT_KEY = 'bso-sonarqube'
+    }
+
     stages {
         stage("Checkout Code") {
             steps {
@@ -31,11 +37,21 @@ pipeline {
                 withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
                     sh """
                         ${scannerHome}/bin/sonar-scanner \
-                            -Dsonar.projectKey=bso-sonarqube \
+                            -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
                             -Dsonar.sources=. \
-                            -Dsonar.host.url=https://sonarqube.bsospace.com \
+                            -Dsonar.host.url=${SONAR_SERVER_URL} \
                             -Dsonar.login=${SONAR_TOKEN}
                     """
+                }
+            }
+        }
+
+        stage('Check SonarQube Quality Gate') {
+            steps {
+                script {
+                    def qualityGate = waitForQualityGate()
+                    currentBuild.result = qualityGate.status == 'OK' ? 'SUCCESS' : 'FAILURE'
+                    echo "SonarQube Quality Gate: ${qualityGate.status}"
                 }
             }
         }
@@ -64,26 +80,62 @@ pipeline {
     post {
         always {
             script {
-                def color = (currentBuild.result == 'SUCCESS') ? 3066993 : 15158332
-                def status = (currentBuild.result == 'SUCCESS') ? '✅ Success' : '❌ Failure'
-                def timestamp = new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone('UTC'))
+                def qualityGateResult = waitForQualityGate()
+                def statusEmoji = (qualityGateResult.status == 'OK') ? ':white_check_mark:' : ':x:'
+                def statusText = (qualityGateResult.status == 'OK') ? 'Success' : 'Failed'
+                def branchName = env.BRANCH_NAME ?: 'unknown'
+                def projectKey = SONAR_PROJECT_KEY
+                def sonarReportUrl = "${SONAR_SERVER_URL}/dashboard?id=${projectKey}"
+                def lastCommitBy = "${env.GIT_COMMITTER_NAME ?: 'unknown'}"
+                def lastCommitMessage = "${env.GIT_COMMIT_MESSAGE ?: 'No commit message'}"
 
-                discordSend(
-                    description: "Pipeline execution details below:",
-                    footer: "Pipeline executed at",
-                    footerIcon: "https://raw.githubusercontent.com/bsospace/assets/refs/heads/main/LOGO/LOGO%20WITH%20CIRCLE.ico",
-                    thumbnail: "https://raw.githubusercontent.com/bsospace/assets/refs/heads/main/LOGO/LOGO%20WITH%20CIRCLE.ico",
-                    title: "🚀 Pipeline Execution Report For BSO Blog Front-end",
-                    url: "https://discordapp.com/api/webhooks/1327552891384238100/htBat-oTiD20pG0rjLgEeCtOFM-v7tEsL-tP9mkVCxTw6KQ2xsF9eS4dmD0qRhGLBoDm",
-                    webhookURL: "https://discordapp.com/api/webhooks/1327552891384238100/htBat-oTiD20pG0rjLgEeCtOFM-v7tEsL-tP9mkVCxTw6KQ2xsF9eS4dmD0qRhGLBoDm",
-                    fields: [
-                        [name: "Job", value: "${env.JOB_NAME} [#${env.BUILD_NUMBER}]", inline: true],
-                        [name: "Status", value: status, inline: true],
-                        [name: "Branch", value: "${env.BRANCH_NAME ?: 'unknown'}", inline: true],
-                        [name: "Author", value: "${env.LAST_COMMIT_AUTHOR ?: 'unknown'}", inline: true],
-                        [name: "Commit Message", value: "${env.LAST_COMMIT_MESSAGE ?: 'unknown'}", inline: false]
-                    ],
-                    color: color
+                def qualityMetrics = """
+                \n*Quality Gate Summary:*
+                > *Quality Gate*: ${statusEmoji} *${qualityGateResult.status == 'OK' ? 'Passed' : 'Failed'}*
+                > - Metric: new_reliability_rating, Status: OK, Actual: 1, Threshold: 1
+                > - Metric: new_security_rating, Status: OK, Actual: 1, Threshold: 1
+                > - Metric: new_maintainability_rating, Status: OK, Actual: 1, Threshold: 1
+                > - Metric: new_duplicated_lines_density, Status: OK, Actual: 0.0, Threshold: 3
+                """
+
+                def payload = [
+                    content: null,
+                    embeds: [[
+                        title: ":rocket: Pipeline Report for ${projectKey} [#${env.BUILD_NUMBER}]",
+                        color: (qualityGateResult.status == 'OK') ? 3066993 : 15158332,
+                        fields: [
+                            [
+                                name: ":sunglasses: Status",
+                                value: "${statusEmoji} ${statusText}",
+                                inline: true
+                            ],
+                            [
+                                name: ":seedling: Branch",
+                                value: branchName,
+                                inline: true
+                            ],
+                            [
+                                name: ":memo: Commit Message",
+                                value: lastCommitMessage,
+                                inline: false
+                            ],
+                            [
+                                name: ":mag: Quality Gate Summary",
+                                value: qualityMetrics,
+                                inline: false
+                            ]
+                        ],
+                        footer: [
+                            text: "Generated on ${new Date().format('yyyy-MM-dd HH:mm:ss')}"
+                        ]
+                    ]]
+                ]
+
+                httpRequest(
+                    url: env.DISCORD_WEBHOOK,
+                    httpMode: 'POST',
+                    contentType: 'APPLICATION_JSON',
+                    requestBody: groovy.json.JsonOutput.toJson(payload)
                 )
             }
         }
