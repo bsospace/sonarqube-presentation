@@ -5,10 +5,7 @@ pipeline {
         DISCORD_WEBHOOK = credentials('discord-webhook')
         SONAR_SERVER_URL = 'https://sonarqube.bsospace.com'
         SONAR_PROJECT_KEY = 'bso-sonarqube'
-    }
-
-    tools {
-        sonarQubeScanner 'SonarQube-Scanner'
+        SONAR_AUTH_TOKEN = credentials('sonarqube-auth')
     }
 
     stages {
