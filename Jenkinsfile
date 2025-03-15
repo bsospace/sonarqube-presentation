@@ -56,7 +56,7 @@ pipeline {
                 script {
                     if (env.BRANCH_NAME == 'main') {
                         echo "Deploying using docker-compose.yml"
-                        sh "docker compose up -d --build"
+                        sh "docker compose up --build -d"
                     } else {
                         echo 'skipping deployment for non-main branches'
                     }
