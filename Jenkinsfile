@@ -3,9 +3,8 @@ pipeline {
 
     environment {
         DISCORD_WEBHOOK = credentials('discord-webhook')
-        SONAR_SERVER_URL = 'https://sonarqube.bsospace.com'
         SONAR_PROJECT_KEY = 'bso-sonarqube'
-        SONAR_AUTH_TOKEN = credentials('sonarqube-auth')
+        SONAR_HOST_URL = 'http://host.docker.internal:9000'
     }
 
     stages {
@@ -32,14 +31,20 @@ pipeline {
 
         stage("Run SonarQube Analysis") {
             steps {
-                withSonarQubeEnv('SonarQube-Scanner') {  
-                    sh """
-                        sonar-scanner \
-                            -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                            -Dsonar.sources=. \
-                            -Dsonar.host.url=${SONAR_SERVER_URL} \
-                            -Dsonar.login=${SONAR_AUTH_TOKEN}
-                    """
+                withSonarQubeEnv('SonarQube-Scanner') {
+                    withCredentials([string(credentialsId: 'sonarqube-auth', variable: 'SONAR_AUTH_TOKEN')]) {
+                        sh """
+                            docker run --rm \
+                                --network bridge \
+                                -e SONAR_HOST_URL=${SONAR_HOST_URL} \
+                                -e SONAR_LOGIN=${SONAR_AUTH_TOKEN} \
+                                -v $(pwd):/usr/src \
+                                sonarsource/sonar-scanner-cli \
+                                -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                                -Dsonar.sources=/usr/src \
+                                -Dsonar.host.url=${SONAR_HOST_URL}
+                        """
+                    }
                 }
             }
         }
@@ -87,7 +92,7 @@ pipeline {
                 def statusText = (qualityGateResult.status == 'OK') ? 'Success' : 'Failed'
                 def branchName = env.BRANCH_NAME ?: 'unknown'
                 def projectKey = SONAR_PROJECT_KEY
-                def sonarReportUrl = "${SONAR_SERVER_URL}/dashboard?id=${projectKey}"
+                def sonarReportUrl = "${SONAR_HOST_URL}/dashboard?id=${projectKey}"
                 def lastCommitBy = "${env.GIT_COMMITTER_NAME ?: 'unknown'}"
                 def lastCommitMessage = "${env.GIT_COMMIT_MESSAGE ?: 'No commit message'}"
 
