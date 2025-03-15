@@ -4,7 +4,7 @@ pipeline {
     environment {
         DISCORD_WEBHOOK = credentials('discord-webhook')
         SONAR_PROJECT_KEY = 'bso-sonarqube'
-        SONAR_HOST_URL = 'http://host.docker.internal:9000'
+        SONAR_HOST_URL = 'http://host.docker.internal:9000'  
     }
 
     stages {
@@ -35,10 +35,10 @@ pipeline {
                     withCredentials([string(credentialsId: 'sonarqube-auth', variable: 'SONAR_AUTH_TOKEN')]) {
                         sh """
                             docker run --rm \
-                                --network bridge \
+                                --network sonarqube_network \  // ใช้ network ของ SonarQube
                                 -e SONAR_HOST_URL=${SONAR_HOST_URL} \
-                                -e SONAR_LOGIN=${SONAR_AUTH_TOKEN} \
-                                -v $(pwd):/usr/src \
+                                -e SONAR_LOGIN="${env.SONAR_AUTH_TOKEN}" \  // แก้ `$` ให้ใช้ `${env.}`
+                                -v \$(pwd):/usr/src \
                                 sonarsource/sonar-scanner-cli \
                                 -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
                                 -Dsonar.sources=/usr/src \
