@@ -1,3 +1,4 @@
+[![Quality Gate Status](https://sonarqube.bsospace.com/api/project_badges/measure?project=bso-sonarqube&metric=alert_status&token=sqb_c76b8ebd20244cc3075d804ee9ff8c5ba3566eb9)](https://sonarqube.bsospace.com/dashboard?id=bso-sonarqube)
 # SonarQube Defect Demo Project
 
 This project demonstrates various types of software defects analyzed by SonarQube. It is built using React (Vite.js) and intentionally contains code smells, bugs, vulnerabilities, and other issues to simulate real-world scenarios.
