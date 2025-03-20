@@ -28,18 +28,13 @@ app.get('/admin', (req, res) => {
   res.send('Welcome to the admin panel!')
 })
 
-// 3. AWS IAM policies should not allow privilege escalation
-//  Vulnerability: นโยบาย IAM อาจอนุญาตให้ผู้ใช้ยกระดับสิทธิ์ของตนเอง
-const awsPolicy = {
-  Version: '2012-10-17',
-  Statement: [
-    {
-      Effect: 'Allow',
-      Action: 'iam:*', //  อนุญาต IAM Actions ทั้งหมด
-      Resource: '*'
-    }
-  ]
-}
+
+// 3. "alert(...)" should not be used
+const unexpectedCondition = true;
+
+if(unexpectedCondition) {
+    alert("Unexpected Condition");
+  }
 
 // 4. Cipher algorithms should be robust
 //  Vulnerability: ใช้อัลกอริทึมที่อ่อนแอ เช่น MD5
