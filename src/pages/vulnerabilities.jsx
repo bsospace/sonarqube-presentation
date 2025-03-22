@@ -9,13 +9,13 @@ const app = express();
 
 app.use(session({ secret: "old-session-secret", resave: false, saveUninitialized: true }));
 app.post('/login', (req, res) => {
-    req.session.user = req.body.username; // ❌ ไม่สร้าง session ใหม่ อาจทำให้เกิด session fixation attack
+    req.session.user = req.body.username; //  ไม่สร้าง session ใหม่ อาจทำให้เกิด session fixation attack
     res.send("User logged in");
 });
 
 // 2. Cryptographic keys should be robust
 const crypto = require('crypto');
-const weakKey = "12345"; // ❌ คีย์สั้นและคาดเดาได้ง่าย
+const weakKey = "12345"; //  คีย์สั้นและคาดเดาได้ง่าย
 const cipher = crypto.createCipheriv('aes-128-cbc', weakKey, '1234567890123456');
 let encrypted = cipher.update("sensitive-data", 'utf8', 'hex');
 encrypted += cipher.final('hex');
@@ -35,7 +35,7 @@ console.log(encrypted);
   const secureExample = `
 // วิธีแก้ไข Session Fixation
 app.post('/login', (req, res) => {
-    req.session.regenerate((err) => { // ✅ สร้าง session ใหม่หลังการล็อกอิน
+    req.session.regenerate((err) => { //  สร้าง session ใหม่หลังการล็อกอิน
         if (err) {
             res.status(500).send("Session regeneration failed");
             return;
@@ -46,7 +46,7 @@ app.post('/login', (req, res) => {
 });
 
 // วิธีแก้ไขการใช้คีย์ที่อ่อนแอ
-const strongKey = crypto.randomBytes(32); // ✅ ใช้คีย์ที่สุ่มและปลอดภัย
+const strongKey = crypto.randomBytes(32); //  ใช้คีย์ที่สุ่มและปลอดภัย
 const cipher = crypto.createCipheriv('aes-256-cbc', strongKey, '1234567890123456');
 let encrypted = cipher.update("sensitive-data", 'utf8', 'hex');
 encrypted += cipher.final('hex');
